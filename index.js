@@ -1,8 +1,8 @@
 /*
  * @Author: xizh 
  * @Date: 2021-07-21 22:57:14 
- * @Last Modified by: xizh
- * @Last Modified time: 2021-07-27 00:44:15
+ * @Last Modified by: cooperxie
+ * @Last Modified time: 2021-07-27 11:20:46
  */
 
 'use strict'
@@ -16,6 +16,7 @@ const ora = require('ora')
 const inquirer = require('inquirer')
 const downloadRepo = require('download-git-repo')
 const execa = require('execa')
+const shelljs = require('shelljs')
 
 const {createFolder, createFile, isObject} = require('./utils/index')
 
@@ -102,13 +103,8 @@ class XizhCli {
                 this.downloadTemplate().then(flag => {
                     if(flag){
                         this.writeConfig()
-                        return flag
                     }
                 })
-            }).then(res => {
-                if(res){
-                    this.installDependencies()
-                }
             }).catch(err => {
                 console.log('输入参数有误',err.msg)
             })
@@ -118,7 +114,7 @@ class XizhCli {
 
     }
     // 从git下载模板工程
-    downloadTemplate = () => {
+    downloadTemplate(){
         // 1. download git 仓库
         const spinner = ora('downloading template').start();
         spinner.color = 'blue'
@@ -185,6 +181,10 @@ class XizhCli {
                 if(err){
                     console.log('fs.writeFile error',err)
                 }
+                else{
+                    console.log('开始安装依赖')
+                    this.installDependencies()
+                }
             })
         }
         catch(err){
@@ -195,8 +195,16 @@ class XizhCli {
     // 安装node_modules 即执行npm i
     installDependencies(){
         try{
-            let runPath = path.resolve(__dirname, name)
-            execa(runPath, 'npm install', { stdio: 'inherit' })
+            let runPath = path.resolve(__dirname, this.config.name)
+            console.log(runPath);
+            
+            // execa('npm', ['install'])
+            shelljs.cd(runPath)
+            shelljs.exec('npm i', {async: false}, (code, stdout, stderr) => {
+                console.log(code)
+                console.log(stdout)
+                console.log(stderr)
+            })
             
         }catch(err){
             console.log('安装依赖出错')
