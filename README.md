@@ -7,17 +7,21 @@
 
 ### cli流程分析
 
-#### 用户自定义的内容
+-  用户自定义的内容
+    - 项目名 name
+    - 项目描述 description
+    - 框架选择 framework
+        - vue
+        - react
 
-- 项目名 name
-- 项目描述 descripttion
-- 框架选择 framework
-    - vue
+- 下载模板：根据框架选择下载对应的工程模板
+- 写入自定义的内容到package.json
+- 安装依赖
 
-#### 下载模板
-根据框架选择下载对应的工程模板
-
-#### 
+### todoList
+- command 命令行模块
+  - 可以用`xizh create 'projectName'`来做到`new CLI.run()`
+- react项目模板git工程
 
 
 
