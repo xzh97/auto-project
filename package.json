@@ -1,8 +1,11 @@
 {
   "name": "xizh-cli",
-  "version": "1.0.0",
+  "version": "1.0.1-t1",
   "description": "前端脚手架",
   "main": "index.js",
+  "bin": {
+    "xizh": "bin/index.js"
+  },
   "scripts": {
     "test": "node test/index.js",
     "start": "node index.js"

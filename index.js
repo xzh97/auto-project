@@ -2,7 +2,7 @@
  * @Author: xizh 
  * @Date: 2021-07-21 22:57:14 
  * @Last Modified by: xizh
- * @Last Modified time: 2021-07-30 00:10:23
+ * @Last Modified time: 2021-09-22 22:18:01
  */
 
 'use strict'
@@ -15,10 +15,7 @@ const figlet = require('figlet')
 const ora = require('ora')
 const inquirer = require('inquirer')
 const downloadRepo = require('download-git-repo')
-const execa = require('execa')
 const shelljs = require('shelljs')
-
-const {createFolder, createFile, isObject} = require('./utils/index')
 
 class XizhCli {
     constructor(options){
@@ -71,8 +68,8 @@ class XizhCli {
     run(){
         console.log(
             chalk.blue(
-                figlet.textSync(`xizh-cli`,{
-                    font: "Ghost",
+                figlet.textSync(`XIZH-CLI`,{
+                    // font: "Ghost",
                     horizontalLayout: 'fitted',
                     verticalLayout: 'default',
                 })
@@ -142,7 +139,21 @@ class XizhCli {
                 let val = res[key];
                 let configInfo = this.questions.find(item => item.name === key)
                 if(val){
-
+                    if(key === 'name') {
+                        let projectPath = path.resolve(__dirname, this.config.name)
+                        fs.access(projectPath, constants.F_OK, (err) => {
+                            console.log(`${file} ${err ? 'does not exist' : 'exists'}`);
+                            if(!err){
+                                let errInfo = {
+                                    msg: '该目录已存在'
+                                }
+                                reject(errInfo)
+                            }
+                            else{
+                                resolve(err)
+                            }
+                        });
+                    }
                 }
                 else{
                     if(required){
@@ -198,7 +209,6 @@ class XizhCli {
             let runPath = path.resolve(__dirname, this.config.name)
             console.log(runPath);
             
-            // execa('npm', ['install'])
             shelljs.cd(runPath)
             shelljs.exec('npm i', {async: false}, (code, stdout, stderr) => {
                 console.log(code)
