@@ -19,9 +19,8 @@
 - 安装依赖
 
 ### todoList
-- command 命令行模块
-  - 可以用`xizh create 'projectName'`来做到`new CLI.run()`
-- react项目模板git工程
+- [x] 可以用`xizh create 'projectName'`来做到`new CLI.run()`
+- [x] 项目模板git工程
 
 
 

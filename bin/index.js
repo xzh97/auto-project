@@ -2,12 +2,11 @@
 /*
  * @Author: xizh
  * @Date: 2021-08-01 21:44:04
- * @Last Modified by: xizh
- * @Last Modified time: 2021-09-22 22:34:21
+ * @Last Modified by: cooperxie
+ * @Last Modified time: 2021-09-27 10:29:30
  */
 
 const { program } = require("commander");
-const minimist = require("minimist");
 const XizhCli = require("../index");
 
 

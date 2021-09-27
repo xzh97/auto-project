@@ -1,8 +1,8 @@
 /*
  * @Author: xizh 
  * @Date: 2021-07-21 22:57:14 
- * @Last Modified by: xizh
- * @Last Modified time: 2021-09-22 22:18:01
+ * @Last Modified by: cooperxie
+ * @Last Modified time: 2021-09-26 17:42:12
  */
 
 'use strict'
@@ -19,13 +19,10 @@ const shelljs = require('shelljs')
 
 class XizhCli {
     constructor(options){
-        this.options = options;
-        this.config = null;
+        this.options = options; // 保存命令行传过来的参数，目前只有projectName，可能之后还有其它逻辑。
+        this.config = null; // 用来保存用户选择和输入的项目配置
+        this.projectPath = ''; // project 目录
         this.rules = [
-            {
-                key: 'name',
-                required: true,
-            },
             {
                 key: 'description',
                 required: false,
@@ -40,13 +37,13 @@ class XizhCli {
                 required: true,
                 defaultValue: 'vue'
             },
-        ]
+        ]// 校验规则
         this.questions = [
-            {
-                type: 'input',
-                name: 'name',
-                message: '项目名称',
-            },
+            // {
+            //     type: 'input',
+            //     name: 'name',
+            //     message: '项目名称',
+            // },
             {
                 type: 'input',
                 name: 'description',
@@ -61,9 +58,9 @@ class XizhCli {
                 type: 'list',
                 name: 'framework',
                 message: '使用框架',
-                choices:['vue']
+                choices:['vue', 'react']
             }, 
-        ]
+        ] // 自定义的问题配置
     }
     run(){
         console.log(
@@ -75,7 +72,15 @@ class XizhCli {
                 })
             )
         )
-        this.init();
+
+        // 先校验是否可以新建目录，不然要先选择完再判断
+        this.projectPath = path.resolve(__dirname, this.options.name)
+        fs.access(this.projectPath, fs.constants.F_OK, (err) => {
+            console.log(`${err ? 'does not exist' : 'exists'}`);
+            if(err){
+                this.init();
+            }
+        });
     }
     
     init(){
@@ -95,6 +100,7 @@ class XizhCli {
          */
         
         inquirer.prompt(this.questions).then(res => {
+            res.name = this.options.name
             this.validateConfig(res).then(res => {
                 this.config = res;
                 this.downloadTemplate().then(flag => {
@@ -103,7 +109,7 @@ class XizhCli {
                     }
                 })
             }).catch(err => {
-                console.log('输入参数有误',err.msg)
+                console.log('输入参数有误',err)
             })
         }).catch(err => {
             console.log('初始化错误', err)
@@ -114,9 +120,14 @@ class XizhCli {
     downloadTemplate(){
         // 1. download git 仓库
         const spinner = ora('downloading template').start();
+        // 用gitee的地址，国内快一点
+        const repoMap = {
+            vue: 'direct:https://gitee.com/Xzh97/vue-project-template.git',
+            react: 'direct:https://gitee.com/Xzh97/react-project-template.git'
+        }
         spinner.color = 'blue'
         return new Promise((resolve, reject) => {
-            downloadRepo(`github:xzh97/vue-project-template`, `${__dirname}/${this.config.name}/`, err => {
+            downloadRepo(repoMap[this.config.framework], `${this.projectPath}/`,{clone: true}, err => {
                 spinner.stop()
                 if(!err){
                     // 把自定义的内容写入模板内
@@ -138,21 +149,11 @@ class XizhCli {
                 let { key, required, defaultValue = '' } = item;
                 let val = res[key];
                 let configInfo = this.questions.find(item => item.name === key)
+                console.log(val)
                 if(val){
                     if(key === 'name') {
-                        let projectPath = path.resolve(__dirname, this.config.name)
-                        fs.access(projectPath, constants.F_OK, (err) => {
-                            console.log(`${file} ${err ? 'does not exist' : 'exists'}`);
-                            if(!err){
-                                let errInfo = {
-                                    msg: '该目录已存在'
-                                }
-                                reject(errInfo)
-                            }
-                            else{
-                                resolve(err)
-                            }
-                        });
+                        let projectPath = path.resolve(__dirname, this.options.name)
+                        
                     }
                 }
                 else{
@@ -176,12 +177,13 @@ class XizhCli {
     // 把名称，描述，author写入到下载的git工程里的package.json
     writeConfig(){
         try{
-            let { name, description, author } = this.config;
-            let packageJsonPath = path.resolve(__dirname, name, 'package.json')
+            let { description, author } = this.config;
+            let packageJsonPath = path.resolve(this.projectPath, './package.json')
             let packageJSON = require(packageJsonPath)
     
             if(packageJSON){
-                packageJSON.name = name
+                let projectName = this.projectPath.split('/').pop()
+                packageJSON.name = projectName
                 packageJSON.description = description
                 packageJSON.author = author
             }
@@ -199,6 +201,7 @@ class XizhCli {
             })
         }
         catch(err){
+            console.log(err)
             console.log('写入package.json配置出错')
         }
     }
@@ -206,10 +209,7 @@ class XizhCli {
     // 安装node_modules 即执行npm i
     installDependencies(){
         try{
-            let runPath = path.resolve(__dirname, this.config.name)
-            console.log(runPath);
-            
-            shelljs.cd(runPath)
+            shelljs.cd(this.projectPath)
             shelljs.exec('npm i', {async: false}, (code, stdout, stderr) => {
                 console.log(code)
                 console.log(stdout)
